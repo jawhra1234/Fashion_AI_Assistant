@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+transformers
+sentence-transformers
+chromadb
+streamlit
+pillow
+opencv-python
+colorthief
+requests
+python-multipart
