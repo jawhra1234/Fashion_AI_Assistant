@@ -28,20 +28,58 @@ class FashionOrchestrator:
             Dictionary containing outfit recommendations
         """
         # Step 1: Process image if provided
-        vision_output = {}
+        vision_output = None
+        detected_items_list = []
+        
         if image_bytes:
-            vision_output = self.vision.extract_clothing_info(image_bytes)
+            try:
+                vision_output = self.vision.analyze_image(image_bytes)
+                print("VISION OUTPUT:", vision_output)
+                
+                # Extract items safely
+                if vision_output and isinstance(vision_output, dict):
+                    detected_items_list = vision_output.get("items", [])
+                    print(f"Extracted {len(detected_items_list)} items from vision")
+            except Exception as e:
+                print(f"ERROR in vision processing: {e}")
+        else:
+            print("VISION OUTPUT: No image provided")
         
         # Step 2: Retrieve relevant fashion rules
-        retrieved_rules = self.rag.retrieve_rules(occasion)
+        try:
+            retrieved_rules = self.rag.retrieve_rules(occasion)
+            print("OCCASION:", occasion)
+            print("RAG RULES:", retrieved_rules)
+        except Exception as e:
+            print(f"ERROR retrieving rules: {e}")
+            retrieved_rules = []
         
         # Step 3: Generate recommendation using LLM
         context = {
-            "vision_output": vision_output,
+            "vision": vision_output,
             "occasion": occasion,
-            "retrieved_rules": retrieved_rules
+            "rules": retrieved_rules
         }
         
-        recommendation = self.llm.generate_outfit(context)
+        try:
+            recommendation = self.llm.generate_outfit(context)
+        except Exception as e:
+            print(f"ERROR in LLM generation: {e}")
+            recommendation = self._create_fallback_response()
+        
+        # Add detected items to response
+        if detected_items_list:
+            recommendation["detected_items"] = detected_items_list
+        else:
+            recommendation["detected_items"] = None
         
         return recommendation
+    
+    def _create_fallback_response(self) -> Dict[str, Any]:
+        """Create a fallback response when things fail."""
+        return {
+            "outfit": ["casual shirt", "jeans", "sneakers"],
+            "reasoning": "Default recommendation: comfortable casual outfit.",
+            "alternative": ["polo shirt", "chinos", "loafers"],
+            "style_score": 5.0
+        }

@@ -1,0 +1,18 @@
+# venv
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Chroma DB (IMPORTANT)
+backend/rag/chroma_db/
+
+# Logs
+*.log
+
+# Streamlit
+.streamlit/
+
+# OS
+.DS_Store

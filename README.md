@@ -1,202 +1,296 @@
 # 🧠 Agentic AI Fashion Assistant
 
-A full-stack AI application that provides personalized fashion recommendations using computer vision, retrieval-augmented generation (RAG), and large language models (LLMs).
+This repository is a local AI-powered fashion recommendation system. It combines optional image analysis, retrieval-augmented generation (RAG), and a local LLM service to recommend outfits and explain why they work.
 
-## 🎯 Features
+---
 
-- **Computer Vision**: Extract clothing information from uploaded images
-- **Fashion Knowledge Base**: Retrieve relevant fashion rules using RAG
-- **AI Recommendations**: Generate outfit suggestions with reasoning
-- **Web Interface**: Clean Streamlit UI for easy interaction
-- **Local Execution**: Runs entirely on your machine with free/open-source tools
+## ✅ What This Project Does
 
-## 🏗️ Architecture
+- Accepts an occasion description from the user
+- Optionally accepts a clothing image upload
+- Uses a vision module to identify clothing type and color from the image
+- Uses a RAG module to retrieve fashion rules from a knowledge base
+- Uses an LLM via Ollama to create an outfit recommendation
+- Returns structured output with:
+  - recommended outfit
+  - explanation/reasoning
+  - alternative outfit
+  - style score
 
-The system follows a modular pipeline:
+---
+
+## 🧩 Architecture
+
+The app is organized into three main parts:
+
+1. **Frontend** (`frontend/app.py`)
+   - Streamlit user interface
+   - Accepts occasion and image input
+   - Sends requests to the backend
+   - Displays the recommendation result
+
+2. **Backend API** (`backend/main.py`)
+   - FastAPI server with `POST /recommend`
+   - Handles form and file upload processing
+   - Uses the orchestrator to run the recommendation pipeline
+
+3. **Recommendation pipeline** (`backend/orchestrator.py`)
+   - Coordinates vision processing, RAG retrieval, and LLM generation
+   - Builds the input context for the LLM
+   - Handles fallback responses and error cases
+
+---
+
+## 📂 Project Structure
 
 ```
-Input → Vision Module → RAG Retrieval → LLM Reasoning → Output
+fashion-ai-assistant/
+├── backend/
+│   ├── main.py              # FastAPI application and endpoint
+│   ├── orchestrator.py      # Pipeline orchestration logic
+│   ├── llm/
+│   │   └── llm_engine.py    # Ollama prompt generation and parsing
+│   ├── rag/
+│   │   ├── ingest.py        # Fashion rule ingestion into ChromaDB
+│   │   ├── retrieve.py      # Rule retrieval using embeddings
+│   │   └── rules.txt        # Fashion rules knowledge base
+│   ├── vision/
+│   │   └── vision_model.py  # Image analysis and color detection
+│   └── utils/               # Utility helper package (empty placeholder)
+├── frontend/
+│   └── app.py               # Streamlit web interface
+├── requirements.txt         # Required Python packages
+└── README.md                # Project documentation
 ```
 
-- **Vision Module**: Uses CLIP model to classify clothing items and extract colors
-- **RAG Module**: Stores fashion rules in ChromaDB vector database for semantic search
-- **LLM Module**: Uses Ollama with Mistral/Llama models for intelligent recommendations
-- **Orchestrator**: Coordinates the entire pipeline
-- **API**: FastAPI backend serving the recommendations
-- **Frontend**: Streamlit web interface
+---
 
-## 📋 Prerequisites
+## 🛠️ Requirements
 
-- Python 3.8+
-- Ollama installed and running locally
-- 8-16GB RAM recommended
+- Python 3.8 or later
+- Ollama installed locally
+- A downloaded Ollama model such as `mistral` or `llama3`
+- Recommended: 8+ GB RAM for local model usage
 
-## 🚀 Setup Instructions
+---
 
-### 1. Install Ollama
+## 🚀 Setup and Run Instructions
 
-Download and install Ollama from [ollama.ai](https://ollama.ai)
+### 1. Create and Activate Virtual Environment
 
-Pull the required model:
-```bash
+From the project root:
+
+```powershell
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+```
+
+If using `cmd.exe`:
+
+```cmd
+venv\Scripts\activate.bat
+```
+
+---
+
+### 2. Install Dependencies
+
+```powershell
+pip install -r requirements.txt
+```
+
+---
+
+### 3. Install and Start Ollama
+
+Install Ollama from https://ollama.ai and start the service.
+
+Pull a model such as:
+
+```powershell
 ollama pull mistral
 # or
 ollama pull llama3
 ```
 
-### 2. Clone and Setup Project
+To run Ollama:
 
-```bash
-# Navigate to project directory
-cd fashion-ai-assistant
-
-# Create virtual environment
-python -m venv venv
-source venv/Scripts/activate  # On Windows
-# or
-source venv/bin/activate      # On Linux/Mac
-
-# Install dependencies
-pip install -r requirements.txt
+```powershell
+ollama serve
 ```
 
-### 3. Ingest Fashion Rules
+> The backend expects Ollama to be reachable at `http://localhost:11434`.
 
-```bash
-# Navigate to backend directory
+---
+
+### 4. Ingest Fashion Rules
+
+The knowledge base is stored in `backend/rag/rules.txt` and must be loaded into ChromaDB.
+
+```powershell
 cd backend
-
-# Ingest fashion rules into vector database
 python -m rag.ingest
 ```
 
-### 4. Start Backend
+This creates the persistent vector store under `backend/rag/chroma_db`.
 
-```bash
-# From project root
+---
+
+### 5. Start the Backend API
+
+From the project root:
+
+```powershell
 python -m backend.main
 ```
 
-If you prefer to run from the backend folder:
+The backend listens on:
 
-```bash
-cd backend
-python main.py
-```
+- `http://localhost:8000`
 
-The API will be available at `http://localhost:8000`
+---
 
-### 5. Start Frontend
+### 6. Start the Frontend UI
 
-Open a new terminal and run:
+In a new terminal from the project root:
 
-```bash
-# From project root
+```powershell
 streamlit run frontend/app.py
 ```
 
-The web interface will open at `http://localhost:8501`
+Then open the Streamlit interface in your browser at:
 
-## 🎮 Usage
+- `http://localhost:8501`
 
-1. Open the Streamlit web interface
-2. Enter an occasion (e.g., "casual Friday", "formal dinner")
-3. Optionally upload an image of clothing
-4. Click "Get Recommendation"
-5. View your personalized outfit suggestion with reasoning
+---
 
-## 📁 Project Structure
+## 🎯 How to Use the App
 
-```
-fashion-ai-assistant/
-│
-├── backend/
-│   ├── main.py              # FastAPI application
-│   ├── orchestrator.py      # Pipeline orchestration
-│   ├── vision/
-│   │   └── vision_model.py  # CLIP-based clothing analysis
-│   ├── rag/
-│   │   ├── ingest.py        # Knowledge base ingestion
-│   │   ├── retrieve.py      # Rule retrieval
-│   │   └── rules.txt        # Fashion rules database
-│   ├── llm/
-│   │   └── llm_engine.py    # Ollama LLM integration
-│   └── utils/               # Utility functions
-│
-├── frontend/
-│   └── app.py               # Streamlit web interface
-│
-├── requirements.txt          # Python dependencies
-└── README.md                # This file
-```
+1. Open the Streamlit UI
+2. Enter the occasion or event
+3. Optionally upload a photo of a clothing item
+4. Click `Get Recommendation`
+5. Review:
+   - recommended outfit items
+   - reasoning
+   - alternative option
+   - style score
 
-## 🔧 Configuration
+---
 
-### Changing LLM Model
+## 🔍 What Each Module Does
 
-Edit `backend/llm/llm_engine.py`:
+### `backend/vision/vision_model.py`
+- Reads uploaded image bytes
+- Uses OpenCV to decode the image
+- Crops image edges to reduce background noise
+- Detects dominant color with KMeans
+- Converts RGB values into a named color
+- Guesses garment type from aspect ratio
+- Returns structured item metadata
 
-```python
-self.model = "llama3"  # or "mistral"
-```
+### `backend/rag/ingest.py`
+- Reads `rules.txt`
+- Splits content into individual rules
+- Computes embeddings using `SentenceTransformer('all-MiniLM-L6-v2')`
+- Stores text and embeddings in ChromaDB
 
-### Updating Fashion Rules
+### `backend/rag/retrieve.py`
+- Embeds the user query (`occasion`)
+- Queries ChromaDB for the top matching rules
+- Returns the most relevant rules to the orchestrator
 
-1. Edit `backend/rag/rules.txt`
-2. Re-run ingestion:
-```bash
-cd backend
-python -m rag.ingest
-```
+### `backend/llm/llm_engine.py`
+- Builds a prompt using:
+  - detected vision items
+  - occasion text
+  - retrieved fashion rules
+- Sends the prompt to Ollama
+- Parses the response into JSON
+- Normalizes output fields and provides fallback defaults
 
-## 🛠️ Troubleshooting
+### `backend/orchestrator.py`
+- Coordinates the full recommendation flow
+- Calls the vision module if an image is provided
+- Calls RAG retrieval for fashion guidance
+- Calls the LLM to generate final output
+- Returns a response that includes `detected_items`
 
-### Backend Connection Issues
-- Ensure backend is running on port 8000
-- Check for firewall blocking local connections
+### `backend/main.py`
+- Defines the `/recommend` API route
+- Accepts `occasion` and optional image upload
+- Returns structured JSON from the orchestrator
 
-### Ollama Not Responding
-- Verify Ollama is installed and running: `ollama list`
-- Check model is pulled: `ollama pull mistral`
-- Restart Ollama service
+### `frontend/app.py`
+- Streamlit application UI
+- Sends requests to backend with form data and file uploads
+- Displays the recommendation result clearly
 
-### Vision Module Errors
-- Ensure image is in supported format (JPG, PNG)
-- Check transformers library installation
+---
 
-### RAG Database Issues
-- Delete `backend/rag/chroma_db` folder and re-run ingestion
-- Ensure sentence-transformers is installed
+## ⚠️ Important Notes
+
+- The vision logic is simple and heuristic-based, not a full object detector.
+- The system relies on Ollama being available locally.
+- The RAG module only uses the rules stored in `backend/rag/rules.txt`.
+- If any stage fails, the system returns fallback recommendations.
+
+---
+
+## 🧪 Common Troubleshooting
+
+### Backend fails to connect to Ollama
+- Confirm Ollama is running: `ollama serve`
+- Confirm the model is installed: `ollama list`
+- Confirm the URL is `http://localhost:11434`
+
+### Frontend cannot reach backend
+- Confirm backend is running on port `8000`
+- Confirm there is no port conflict or firewall rule
+
+### Rule retrieval not matching well
+- Edit `backend/rag/rules.txt`
+- Re-run `python -m rag.ingest`
+
+### Image upload produces no detection
+- Upload a clear clothing image
+- Supported formats: `jpg`, `jpeg`, `png`
+
+---
+
+## 🧩 Customization Tips
+
+- To change the LLM model, edit `backend/llm/llm_engine.py` and update `self.model`.
+- To change the appearance or inputs of the UI, edit `frontend/app.py`.
+- To add more fashion guidance, update `backend/rag/rules.txt` and re-ingest.
+
+---
 
 ## 📦 Dependencies
 
-- **fastapi**: Web API framework
-- **uvicorn**: ASGI server
-- **transformers**: HuggingFace models (CLIP)
-- **sentence-transformers**: Text embeddings
-- **chromadb**: Vector database
-- **streamlit**: Web interface
-- **pillow**: Image processing
-- **opencv-python**: Computer vision
-- **colorthief**: Color extraction
-- **requests**: HTTP client
-- **python-multipart**: Form and file uploads for FastAPI
+- `fastapi`
+- `uvicorn`
+- `streamlit`
+- `requests`
+- `python-multipart`
+- `opencv-python`
+- `pillow`
+- `chromadb`
+- `sentence-transformers`
+- `transformers`
+- `colorthief`
+
+---
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+- Fork the repository
+- Create a feature branch
+- Make and test your changes
+- Submit a pull request
+
+---
 
 ## 📄 License
 
-This project is open-source and available under the MIT License.
-
-## 🙏 Acknowledgments
-
-- OpenAI for CLIP model
-- Ollama for local LLM serving
-- HuggingFace for transformers library
-- ChromaDB for vector storage
+This project is available under the MIT License.
