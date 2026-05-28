@@ -18,6 +18,12 @@ This repository is a local AI-powered fashion recommendation system. It combines
   - style score
 
 ---
+<img width="935" height="410" alt="image" src="https://github.com/user-attachments/assets/23cba3e8-299a-4854-a024-03514e34d9de" />
+
+<img width="533" height="372" alt="image" src="https://github.com/user-attachments/assets/f12fc2c7-2043-4389-ab0e-4af7f7a353e9" />
+
+<img width="155" height="228" alt="image" src="https://github.com/user-attachments/assets/80c1265b-46a6-4f3e-9924-bdd6757afbe4" />
+
 
 ## 🧩 Architecture
 
