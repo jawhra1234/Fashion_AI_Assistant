@@ -2,9 +2,6 @@ import base64
 import requests
 import json
 import time
-import io
-
-from PIL import Image
 from typing import Dict, Any
 
 
@@ -20,43 +17,16 @@ class VisionModel:
             return {"items": []}
 
         try:
-
             print("\n========== LLAVA VISION ==========")
 
-            # --------------------------------------------------
-            # COMPRESS IMAGE BEFORE SENDING TO LLAVA
-            # --------------------------------------------------
-
-            img = Image.open(io.BytesIO(image_bytes))
-
-            img.thumbnail((448, 448))
-
-            buffer = io.BytesIO()
-
-            img.convert("RGB").save(
-                buffer,
-                format="JPEG",
-                quality=75,
-                optimize=True
-            )
-
-            compressed_bytes = buffer.getvalue()
-
-            print(
-                f"Original: {len(image_bytes)/1024:.1f} KB | "
-                f"Compressed: {len(compressed_bytes)/1024:.1f} KB"
-            )
-
-            base64_image = base64.b64encode(
-                compressed_bytes
-            ).decode("utf-8")
+            base64_image = base64.b64encode(image_bytes).decode("utf-8")
 
             prompt = """
-Analyze this fashion image carefully.
+Analyze this image.
 
-Identify ONLY clothing items that are clearly visible.
+Identify visible clothing items.
 
-Return ONLY valid JSON.
+Return ONLY valid JSON:
 
 {
   "items": [
@@ -70,29 +40,11 @@ Return ONLY valid JSON.
 }
 
 Rules:
-
-- Do NOT invent items.
-- Do NOT repeat items.
-- Maximum 5 items.
-- If unsure, skip the item.
-- Use lowercase values.
-
-Allowed types:
-shirt, t-shirt, blouse, blazer,
-jacket, hoodie, sweater,
-dress, skirt, pants, jeans,
-shorts, shoes, sneakers,
-boots, bag, hat
-
-Allowed patterns:
-solid, striped, plaid,
-checkered, graphic,
-floral, printed, unknown
-
-If material is unclear:
-"unknown"
-
-Return JSON only.
+- Do not repeat duplicate items.
+- Only describe clearly visible clothing.
+- If unsure use "unknown".
+- No explanation.
+- JSON only.
 """
 
             payload = {
@@ -129,6 +81,7 @@ Return JSON only.
             items = parsed.get("items", [])
 
             cleaned_items = []
+
             seen = set()
 
             for item in items:
@@ -137,31 +90,11 @@ Return JSON only.
                     continue
 
                 clothing_item = {
-                    "type": str(
-                        item.get("type", "unknown")
-                    ).lower().strip(),
-
-                    "color": str(
-                        item.get("color", "unknown")
-                    ).lower().strip(),
-
-                    "pattern": str(
-                        item.get("pattern", "unknown")
-                    ).lower().strip(),
-
-                    "material": str(
-                        item.get("material", "unknown")
-                    ).lower().strip()
+                    "type": str(item.get("type", "unknown")).lower(),
+                    "color": str(item.get("color", "unknown")).lower(),
+                    "pattern": str(item.get("pattern", "unknown")).lower(),
+                    "material": str(item.get("material", "unknown")).lower()
                 }
-
-                # Skip useless detections
-
-                if clothing_item["type"] in [
-                    "",
-                    "unknown",
-                    "clothing"
-                ]:
-                    continue
 
                 key = (
                     clothing_item["type"],
@@ -172,11 +105,20 @@ Return JSON only.
                     seen.add(key)
                     cleaned_items.append(clothing_item)
 
-            print(
-                f"Detected {len(cleaned_items)} items"
-            )
-
+            print(f"Detected {len(cleaned_items)} items")
             print(cleaned_items)
+
+            if len(cleaned_items) == 0:
+                return {
+                    "items": [
+                        {
+                            "type": "unknown",
+                            "color": "unknown",
+                            "pattern": "unknown",
+                            "material": "unknown"
+                        }
+                    ]
+                }
 
             return {"items": cleaned_items}
 
@@ -185,5 +127,12 @@ Return JSON only.
             print(f"VISION ERROR: {e}")
 
             return {
-                "items": []
+                "items": [
+                    {
+                        "type": "unknown",
+                        "color": "unknown",
+                        "pattern": "unknown",
+                        "material": "unknown"
+                    }
+                ]
             }
