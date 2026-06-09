@@ -1,4 +1,4 @@
-# 🧠 Agentic AI Fashion Assistant
+# MultiModal AI Fashion Assistant
 
 A local AI-powered fashion recommendation system that combines computer vision, retrieval-augmented generation (RAG), and large language models (LLMs) to generate personalized outfit recommendations with detailed reasoning.
 
