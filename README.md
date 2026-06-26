@@ -619,6 +619,7 @@ Then open the Streamlit interface in your browser at:
 ## 🔍 What Each Module Does
 
 ### `backend/vision/vision_model.py`
+started with this but this is replaced 
 - Reads uploaded image bytes
 - Uses OpenCV to decode the image
 - Crops image edges to reduce background noise
@@ -626,7 +627,15 @@ Then open the Streamlit interface in your browser at:
 - Converts RGB values into a named color
 - Guesses garment type from aspect ratio
 - Returns structured item metadata
+this is replaced with 
+### `backend/vision/vision_model.py`
 
+- Receives uploaded clothing image bytes.
+- Preprocesses the image for multimodal inference.
+- Uses the **LLaVA** vision-language model via **Ollama**.
+- Analyzes the garment using image understanding.
+- Extracts structured attributes such as clothing type, color, pattern, material, and style.
+- Returns structured item metadata for downstream recommendation and RAG components.
 ### `backend/rag/ingest.py`
 - Reads `rules.txt`
 - Splits content into individual rules
@@ -668,7 +677,6 @@ Then open the Streamlit interface in your browser at:
 
 ## ⚠️ Important Notes
 
-- The vision logic is simple and heuristic-based, not a full object detector.
 - The system relies on Ollama being available locally.
 - The RAG module only uses the rules stored in `backend/rag/rules.txt`.
 - If any stage fails, the system returns fallback recommendations.
